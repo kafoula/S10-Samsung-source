@@ -1,0 +1,34 @@
+name: Build5
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install mkbootimg
+      run: |
+        wget -q https://android.googlesource.com/platform/system/tools/mkbootimg/+archive/refs/heads/master.tar.gz -O - | tar xzf - mkbootimg.py
+        chmod +x mkbootimg.py
+        sudo mv mkbootimg.py /usr/local/bin/mkbootimg
+    - name: Install avbtool
+      run: |
+        wget -q https://android.googlesource.com/platform/external/avb/+archive/refs/heads/android10-dev.tar.gz -O - | tar xzf - avbtool
+        chmod +x avbtool
+        sudo mv avbtool /usr/local/bin/avbtool
+    - name: Install toolchain
+      run: |
+        git submodule deinit --force --all
+        rm -fr toolchain
+        git add .
+        mkdir toolchain
+        git submodule add --branch arter97 https://github.com/CruelKernel/samsung-exynos9820-toolchain toolchain/arter97
+    - name: Kernel Build
+      run: ./build_kernel.sh
+    - name: Upload Kernel Zip
+      uses: actions/upload-artifact@v2
+      with:
+        name: ThunderStormsKernel
+        path: ./builds/*.zip
